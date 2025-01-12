@@ -39,6 +39,8 @@ namespace tetr15
 
             private int _graceTicks;
 
+            private Random _rng;
+
             public tetr15()
             {
                 Console.CursorVisible = false;
@@ -50,6 +52,7 @@ namespace tetr15
                 _gravityStopwatch = new Stopwatch();
                 _delay = 500;
                 _graceTicks = 2;
+                _rng = new Random();
 
                 PiecesShapes = new Dictionary<Piece, Position[]>
                     {
@@ -92,27 +95,33 @@ namespace tetr15
 
             private void InputTick()
             {
+                while (_player.Length < 4)
+                    Thread.Sleep(1);
                 ConsoleKey CurrentInput = Console.ReadKey(true).Key;
                 switch (CurrentInput)
                 {
                     case ConsoleKey.W: //Rotate
-
+                    case ConsoleKey.UpArrow:
+                        RotateCurrentPiece();
                         break;
 
                     case ConsoleKey.A: //Left
+                    case ConsoleKey.LeftArrow:
                         CheckAndMovePlayer(-1, 0);
                         break;
 
                     case ConsoleKey.S: //Down
+                    case ConsoleKey.DownArrow:
                         DropTick();
                         break;
 
                     case ConsoleKey.D: //Right
+                    case ConsoleKey.RightArrow:
                         CheckAndMovePlayer(1, 0);
                         break;
 
                     case ConsoleKey.Spacebar: //Drop
-
+                        HardDropPlayer();
                         break;
 
                     case ConsoleKey.C: //Hold
@@ -122,18 +131,46 @@ namespace tetr15
 
             }
 
+            private void RotateCurrentPiece()
+            {
+                if (_currentPiece == Piece.O)
+                    return;
+
+                Position[] Rotated = GetRotated(_player, 1);
+                if (IsValidAndNotPlayer(Rotated))
+                    _player = Rotated;
+                if (_currentPiece == Piece.I)
+                    Swap(_player, 0, 1);
+            }
+
+
+            private void HardDropPlayer()
+            {
+                int yOffset = 1;
+                Position[] Current = GetMoved(_player, 0, yOffset);
+                Position[] Previous = GetCopy<Position>(_player);
+                while (IsValidAndNotPlayer(Current))
+                {
+                    yOffset++;
+                    Previous = GetCopy(Current);
+                    Current = GetMoved(_player, 0, yOffset);
+                }
+                _player = Previous;
+                ClearPlayer();
+            }
+
             private void CheckAndMovePlayer(int x, int y)
             {
                 if (IsValidAndNotPlayer(GetMoved(_player, x, y)))
                 {
-                    _graceTicks = 2;
+                    _graceTicks = 1;
                     _player = GetMoved(_player, x, y);
                 }
             }
 
             private void Tick()
             {
-                if (_bag.Count == 0) FillBag();
+                if (_bag.Count() == 0) FillBag();
                 if (_player.Length != 4) ResetPlayer();
 
                 if (_gravityStopwatch.ElapsedMilliseconds > _delay)
@@ -142,7 +179,7 @@ namespace tetr15
                     _gravityStopwatch.Restart();
                 }
 
-                if (_bag.Count == 0) FillBag();
+                if (_bag.Count() == 0) FillBag();
                 if (_player.Length != 4) ResetPlayer();
 
                 CheckLineClear();
@@ -225,11 +262,11 @@ namespace tetr15
                     PullBag.Add((Piece)i);
                 }
 
-                Random r = new Random();
                 for (int i = 0; i < 7; i++)
                 {
-                    int Pick = r.Next(0, PullBag.Count);
+                    int Pick = _rng.Next(0, PullBag.Count);
                     _bag.Enqueue(PullBag[Pick]);
+                    PullBag.RemoveAt(Pick);
                 }
             }
 
@@ -280,6 +317,26 @@ namespace tetr15
                 return output;
             }
 
+            private T[] GetCopy<T>(T[] InputArray)
+            {
+                T[] output = new T[InputArray.Length];
+                for (int i = 0; i < InputArray.Length; i++)
+                {
+
+                    output[i] = InputArray[i];
+
+                }
+                return output;
+            }
+
+            private void Swap<T>(T[] arr, int a, int b)
+            {
+                T temp = arr[a];
+                arr[a] = arr[b];
+                arr[b] = temp;
+            }
+
+
             private Piece[,] _printBoard;
             private void Print()
             {
@@ -297,7 +354,7 @@ namespace tetr15
                 Console.WriteLine("╔═════════════════════╗");
                 Console.ForegroundColor = ConsoleColor.White;
 
-                for (int y = 0; y < _printBoard.GetLength(1); y++)
+                for (int y = 3; y < _printBoard.GetLength(1); y++)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("║");
@@ -376,12 +433,7 @@ namespace tetr15
             /// <returns></returns>
             public Position[] GetRotated(Position[] Input, int Rotations)
             {
-                Position[] output = new Position[Input.Length];
-
-                for (int i = 0; i < output.Length; i++)
-                {
-                    output[i] = Input[i].GetDeepCopy();
-                }
+                Position[] output = GetCopy(Input);
 
                 Position RotationPivot = output[0].GetDeepCopy();
 
@@ -391,12 +443,13 @@ namespace tetr15
                     output[i].y = output[i].y - RotationPivot.y;
                 }
 
-                for (int i = 0; i < output.Length; i++)
-                {
-                    int TempX = output[i].x;
-                    output[i].x = output[i].y;
-                    output[i].y = -TempX;
-                }
+                for (int rotation = 0; rotation < Rotations; rotation++)
+                    for (int i = 0; i < output.Length; i++)
+                    {
+                        int TempX = output[i].x;
+                        output[i].x = -output[i].y;
+                        output[i].y = TempX;
+                    }
 
                 for (int i = 0; i < output.Length; i++)
                 {
