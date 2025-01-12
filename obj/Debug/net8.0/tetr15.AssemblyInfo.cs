@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("tetr15")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3358cb881b9ca78e8c908119785fa75eba4cd1d5")]
 [assembly: System.Reflection.AssemblyProductAttribute("tetr15")]
 [assembly: System.Reflection.AssemblyTitleAttribute("tetr15")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
