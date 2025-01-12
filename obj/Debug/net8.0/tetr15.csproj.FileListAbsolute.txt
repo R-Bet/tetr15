@@ -12,3 +12,4 @@ C:\Users\royb2\source\repos\tetr15\tetr15\obj\Debug\net8.0\refint\tetr15.dll
 C:\Users\royb2\source\repos\tetr15\tetr15\obj\Debug\net8.0\tetr15.pdb
 C:\Users\royb2\source\repos\tetr15\tetr15\obj\Debug\net8.0\tetr15.genruntimeconfig.cache
 C:\Users\royb2\source\repos\tetr15\tetr15\obj\Debug\net8.0\ref\tetr15.dll
+C:\Users\royb2\source\repos\tetr15\tetr15\obj\Debug\net8.0\tetr15.sourcelink.json
