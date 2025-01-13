@@ -1,0 +1,15 @@
+C:\Users\royb2\source\repos\tetr15\tetr15\bin\Release\net8.0\tetr15.exe
+C:\Users\royb2\source\repos\tetr15\tetr15\bin\Release\net8.0\tetr15.deps.json
+C:\Users\royb2\source\repos\tetr15\tetr15\bin\Release\net8.0\tetr15.runtimeconfig.json
+C:\Users\royb2\source\repos\tetr15\tetr15\bin\Release\net8.0\tetr15.dll
+C:\Users\royb2\source\repos\tetr15\tetr15\bin\Release\net8.0\tetr15.pdb
+C:\Users\royb2\source\repos\tetr15\tetr15\obj\Release\net8.0\tetr15.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\royb2\source\repos\tetr15\tetr15\obj\Release\net8.0\tetr15.AssemblyInfoInputs.cache
+C:\Users\royb2\source\repos\tetr15\tetr15\obj\Release\net8.0\tetr15.AssemblyInfo.cs
+C:\Users\royb2\source\repos\tetr15\tetr15\obj\Release\net8.0\tetr15.csproj.CoreCompileInputs.cache
+C:\Users\royb2\source\repos\tetr15\tetr15\obj\Release\net8.0\tetr15.sourcelink.json
+C:\Users\royb2\source\repos\tetr15\tetr15\obj\Release\net8.0\tetr15.dll
+C:\Users\royb2\source\repos\tetr15\tetr15\obj\Release\net8.0\refint\tetr15.dll
+C:\Users\royb2\source\repos\tetr15\tetr15\obj\Release\net8.0\tetr15.pdb
+C:\Users\royb2\source\repos\tetr15\tetr15\obj\Release\net8.0\tetr15.genruntimeconfig.cache
+C:\Users\royb2\source\repos\tetr15\tetr15\obj\Release\net8.0\ref\tetr15.dll
