@@ -8,7 +8,7 @@ namespace tetr15
         static void Main(string[] args)
         {
             tetr15 t = new tetr15();
-            int score = t.StartGame();
+            int score = t.StartGame(0);
         }
 
         public class tetr15
@@ -36,11 +36,13 @@ namespace tetr15
 
             private Piece _currentPiece;
 
-            private bool _isGamerOver;
+            private bool _isGameOver;
 
             private Dictionary<Piece, Position[]> PiecesShapes;
 
             private Stopwatch _gravityStopwatch;
+
+            private Stopwatch _scoreCollectionStopwatch;
 
             private int _delay;
 
@@ -51,6 +53,14 @@ namespace tetr15
             private bool _wasHeldSwapped;
 
             private int _score;
+
+            private int _scoreCollectionLines;
+
+            private int _linesClearedUpToTen;
+
+            private int _level;
+
+            private int _levelDelayStepSize;
 
             public tetr15()
             {
@@ -63,13 +73,17 @@ namespace tetr15
                 _heldShape = Array.Empty<Position>();
                 _player = Array.Empty<Position>();
                 _bag = new Queue<Piece>();
-                _isGamerOver = false;
+                _isGameOver = false;
                 _gravityStopwatch = new Stopwatch();
+                _scoreCollectionStopwatch = new Stopwatch();
                 _delay = 500;
                 _graceTicks = 2;
                 _rng = new Random();
                 _wasHeldSwapped = false;
                 _score = 0;
+                _linesClearedUpToTen = 0;
+                _level = 0;
+                _levelDelayStepSize = 20;
 
                 PiecesShapes = new Dictionary<Piece, Position[]>
                     {
@@ -91,18 +105,21 @@ namespace tetr15
                 }
             }
 
-            public int StartGame()
+            public int StartGame(int StartingLevel)
             {
+                _level = StartingLevel;
+                _delay -= _levelDelayStepSize * _level;
+
                 Task.Factory.StartNew(() =>
                 {
-                    while (!_isGamerOver)
+                    while (!_isGameOver)
                     {
                         InputTick();
                     }
                 });
 
                 _gravityStopwatch.Start();
-                while (!_isGamerOver)
+                while (!_isGameOver)
                 {
                     Tick();
                 }
@@ -184,12 +201,16 @@ namespace tetr15
                     _gravityStopwatch.Restart();
                 }
 
+                if (_scoreCollectionStopwatch.ElapsedMilliseconds > 150)
+                {
+                    AwardScore(_scoreCollectionLines);
+                    _scoreCollectionStopwatch.Reset();
+                }
+
                 if (_bag.Count() == 1) FillBag();
                 if (_player.Length != 4) ResetPlayer();
 
-                int LinesCleared = CheckLineClear();
-
-                AwardScore(LinesCleared);
+                CheckAndClearLines();
 
                 Console.SetCursorPosition(0, 0);
                 Print();
@@ -214,14 +235,24 @@ namespace tetr15
                         _score += 1000;
                         break;
                 }
+
+                _linesClearedUpToTen += LinesCleared;
+
+                if (_level < 20)
+                    if (_linesClearedUpToTen % 10 != 0)
+                    {
+                        _linesClearedUpToTen -= 10;
+                        _level++;
+                        _delay -= _levelDelayStepSize;
+                    }
             }
 
             //Checks if any lines have been cleared and deletes them using DeleteLine
             //Returns the amount of lines cleared.
-            private int CheckLineClear()
+            private int CheckAndClearLines()
             {
-
                 int Lines = 0;
+
                 for (int y = _board.GetLength(1) - 1; y >= 0; y--)
                 {
                     bool LineFull = true;
@@ -236,8 +267,14 @@ namespace tetr15
 
                     if (LineFull)
                     {
+                        if (!_scoreCollectionStopwatch.IsRunning)
+                        {
+                            _scoreCollectionStopwatch.Start();
+                        }
+
+                        _scoreCollectionLines += 1;
+
                         DeleteLine(y);
-                        Lines++;
                     }
                 }
                 return Lines;
@@ -287,6 +324,18 @@ namespace tetr15
                     _board[_player[i].x, _player[i].y] = _currentPiece;
                 }
 
+                for (int y = 0; y < 4; y++)
+                {
+                    for (int x = 0; x < 24; x++)
+                    {
+                        for (int i = 0; i < _player.Length; i++)
+                        {
+                            if (_player[i].x == x && _player[i].y == y)
+                                _isGameOver = true;
+                        }
+                    }
+                }
+
                 _player = Array.Empty<Position>();
                 _wasHeldSwapped = false;
             }
@@ -315,12 +364,7 @@ namespace tetr15
                 _player = new Position[4];
 
                 _currentPiece = _bag.Dequeue();
-                Position[] tempPlayer = GetCopy(PiecesShapes[_currentPiece]);
-
-                for (int i = 0; i < tempPlayer.Length; i++)
-                {
-                    _player[i] = tempPlayer[i].Clone();
-                }
+                _player = GetCopy(PiecesShapes[_currentPiece]);
 
                 TransferNextPiecesWindows();
 
@@ -497,11 +541,11 @@ namespace tetr15
                 }
 
 
-                WriteLineGreen("╔══════════════╦════════════════╗");
+                WriteLineGreen("╔══════════════════╦════════════╗");
 
-                WriteLineGreen($"║Level:{GetIntCompletedTo8Digit(_score)}║ Score:{GetIntCompletedTo8Digit(_score)} ║");
+                WriteLineGreen($"║  Score:{GetIntCompletedToNthDigit(_score, 8)}  ║  Level:{GetIntCompletedToNthDigit(_level, 2)}  ║");
 
-                WriteLineGreen("╠══════════════╩════════════════╣");
+                WriteLineGreen("╠══════════════════╩════════════╣");
 
                 for (int y = 3; y < _printBoard.GetLength(1); y++)
                 {
@@ -568,7 +612,7 @@ namespace tetr15
                         }
                         WriteLineGreen("║ ");
                     }
-                    else if(y == SideMenuBase + 10)
+                    else if (y == SideMenuBase + 10)
                     {
                         WriteLineGreen("═════════╣");
                     }
@@ -598,13 +642,13 @@ namespace tetr15
 
             }
 
-            private string GetIntCompletedTo8Digit(int input)
+            private string GetIntCompletedToNthDigit(int input, int digit)
             {
                 string str = input.ToString();
 
-                if (str.Length > 8) throw new Exception("Error! Number is longer than 8 digits.");
+                if (str.Length > digit) throw new Exception($"Error! Number is longer than {digit} digits.");
 
-                return str + new string(' ', 8 - str.Length);
+                return new string('0', digit - str.Length) + str;
             }
 
 
