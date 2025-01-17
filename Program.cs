@@ -407,11 +407,16 @@ namespace tetr15
                 _level = StartingLevel;
                 _delay -= _levelDelayStepSize * _level;
 
+                FillBag();
+                ResetPlayer();
+
+                InitializeNextWindows();
+
                 Task.Factory.StartNew(() =>
                 {
                     while (!_isGameOver)
                     {
-                    Tick();
+                        Tick();
                     }
                 });
 
@@ -419,10 +424,29 @@ namespace tetr15
 
                 while (!_isGameOver)
                 {
-                        InputTick();
+                    InputTick();
                 }
 
                 return _score;
+            }
+
+            public void InitializeNextWindows()
+            {
+                Piece SecondNextPieceType = _bag.ElementAt(1);
+                Position[] SecondNextPieceShape = GetCopy(PiecesShapes[SecondNextPieceType]);
+
+                for (int i = 0; i < SecondNextPieceShape.Length; i++)
+                {
+                    _2ndNextPieceBoard[SecondNextPieceShape[i].x - 3, SecondNextPieceShape[i].y - 1] = SecondNextPieceType;
+                }
+
+                Piece NextPieceType = _bag.Peek();
+                Position[] NextPieceShape = GetCopy(PiecesShapes[NextPieceType]);
+
+                for (int i = 0; i < NextPieceShape.Length; i++)
+                {
+                    _nextPieceBoard[NextPieceShape[i].x - 3, NextPieceShape[i].y - 1] = NextPieceType;
+                }
             }
 
             private void InputTick()
@@ -687,20 +711,6 @@ namespace tetr15
 
                 Piece SecondNextPieceType = _bag.ElementAt(1);
                 Position[] SecondNextPieceShape = GetCopy(PiecesShapes[SecondNextPieceType]);
-
-                for (int i = 0; i < SecondNextPieceShape.Length; i++)
-                {
-                    _2ndNextPieceBoard[SecondNextPieceShape[i].x - 3, SecondNextPieceShape[i].y - 1] = SecondNextPieceType;
-                }
-
-                Piece NextPieceType = _bag.Peek();
-                Position[] NextPieceShape = GetCopy(PiecesShapes[NextPieceType]);
-
-                for (int i = 0; i < NextPieceShape.Length; i++)
-                {
-                    _nextPieceBoard[NextPieceShape[i].x - 3, NextPieceShape[i].y - 1] = NextPieceType;
-                }
-
             }
 
             private void TransferNextPiecesWindows()
