@@ -1,5 +1,13 @@
 ﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.IO;
+using System.Text;
+using System.Xml.Linq;
+using System.Collections;
 
 namespace tetr15
 {
@@ -7,8 +15,261 @@ namespace tetr15
     {
         static void Main(string[] args)
         {
+            PrintMenu();
+
+            while (true)
+                switch (Console.ReadKey(true).KeyChar)
+                {
+                    case '1':
+                        PlayGame();
+                        break;
+                    case '2':
+                        ShowTopScores();
+                        break;
+                    case '3':
+                        Exit();
+                        break;
+                }
+        }
+
+        public static void PrintMenu()
+        {
+            Console.SetWindowSize(30, 10);
+            WriteLineGreen("╔════════════════════╗");
+            WriteGreen("║ ");
+            WriteRainbow("Welcome to Tetr15!");
+            WriteLineGreen(" ║");
+            WriteLineGreen("║                    ║");
+            WriteGreen("║ (1)");
+            Console.Write(" Play           ");
+            WriteLineGreen("║");
+            WriteGreen("║ (2)");
+            Console.Write(" Top Scores     ");
+            WriteLineGreen("║");
+            WriteGreen("║ (3)");
+            Console.Write(" Exit Game      ");
+            WriteLineGreen("║");
+            WriteLineGreen("║                    ║");
+            WriteLineGreen("╚════════════════════╝");
+        }
+
+        public static void PlayGame()
+        {
             tetr15 t = new tetr15();
-            int score = t.StartGame(0);
+            double Score = t.StartGame(SelectNumber(20));
+
+            SwallowingWait(300);
+
+            ShowScoreScreen(Score);
+            Console.ForegroundColor = ConsoleColor.Green;
+            string Name = Console.ReadLine();
+            SaveScore(Score, Name);
+
+            Console.Clear();
+            PrintMenu();
+        }
+
+        public static void SwallowingWait(int ms)
+        {
+            Stopwatch Swallow = new Stopwatch();
+            Swallow.Start();
+            while (Swallow.ElapsedMilliseconds < ms)
+            {
+                Console.ReadKey();
+            }
+        }
+
+        private static void ShowScoreScreen(double Score)
+        {
+            Console.Clear();
+            WriteLineGreen("╔══════════════════╗");
+            WriteGreen("║    ");
+            WriteRainbow("Game over!   ");
+            WriteLineGreen(" ║");
+            WriteLineGreen("║                  ║");
+            WriteGreen("║ Score:");
+            WriteRainbow($"{GetDoubleCompletedToNthDigit(Score, 10)} ");
+            WriteLineGreen("║");
+            WriteLineGreen("║                  ║");
+            WriteLineGreen("║ Enter name:      ║");
+            WriteLineGreen("║                  ║");
+            WriteLineGreen("╚══════════════════╝");
+        }
+
+        public static void SaveScore(double Score, string Name)
+        {
+            File.AppendAllLines("Scores.txt", [Name + ":" + Score]);
+        }
+
+        public static void ShowTopScores()
+        {
+            Console.Clear();
+            string[] ScoreTXT = File.ReadAllLines("Scores.txt");
+            List<ScoreWithName> Scores = new List<ScoreWithName>();
+            for (int i = 0; i < ScoreTXT.Length; i++)
+            {
+                double Score = double.Parse(ScoreTXT[i].Split(":")[1]);
+                string Name = ScoreTXT[i].Split(":")[0];
+                Scores.Add((Score, Name));
+            }
+
+            Scores.Sort();
+
+            WriteLineGreen("Top scores: ");
+            int ShowScoresCount = 10;
+            if (Scores.Count < 10)
+                ShowScoresCount = Scores.Count;
+
+            for (int i = 0; i < ShowScoresCount; i++)
+            {
+                WriteLineGreen(Scores[i].Name + ": " + Scores[i].Score);
+            }
+
+            SwallowingWait(200);
+
+            Console.Clear();
+            PrintMenu();
+        }
+
+        public static string GetDoubleCompletedToNthDigit(double input, int digit)
+        {
+            string str = input.ToString();
+
+            if (str.Length > digit) throw new Exception($"Error! Number is longer than {digit} digits.");
+
+            return new string('0', digit - str.Length) + str;
+        }
+
+        public static void Exit()
+        {
+            Environment.Exit(0);
+        }
+
+        public static void WriteGreen(string str)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write(str);
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
+        public static void WriteLineGreen(string str)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(str);
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
+        public static void WriteRainbow(string str)
+        {
+            ConsoleColor[] Rainbow = {
+                ConsoleColor.DarkRed,
+                ConsoleColor.Red,
+                ConsoleColor.DarkYellow,
+                ConsoleColor.Yellow,
+                ConsoleColor.Green,
+                ConsoleColor.DarkGreen,
+                ConsoleColor.Cyan,
+                ConsoleColor.DarkCyan,
+                ConsoleColor.Blue,
+                ConsoleColor.DarkBlue,
+                ConsoleColor.Magenta,
+                ConsoleColor.DarkMagenta,
+            };
+
+            int RainbowIndex = 0;
+            int Step = 1;
+            for (int i = 0; i < str.Length; i++)
+            {
+                Console.ForegroundColor = Rainbow[RainbowIndex];
+                Console.Write(str[i]);
+
+                if (RainbowIndex + Step == Rainbow.Length)
+                    Step = -1;
+                if (RainbowIndex + Step == -1)
+                    Step = 1;
+                RainbowIndex += Step;
+            }
+            Console.BackgroundColor = ConsoleColor.Black;
+        }
+
+        public static int SelectNumber(int End)
+        {
+            Console.Clear();
+
+            WriteLineGreen("Select starting level (0-" + End + ")");
+
+            WriteGreen("╔");
+            for (int i = 0; i < End + 1; i++)
+            {
+                WriteGreen("═");
+            }
+            WriteLineGreen("╗");
+
+            WriteGreen("║■");
+            Console.Write(new string('■', End));
+
+            WriteLineGreen("║");
+
+            WriteGreen("╚");
+            for (int i = 0; i < End + 1; i++)
+            {
+                WriteGreen("═");
+            }
+            WriteLineGreen("╝");
+
+            int Select = 0;
+            ConsoleKey Key = Console.ReadKey(true).Key;
+            while (Key != ConsoleKey.Enter)
+            {
+                Console.SetCursorPosition(1, 2);
+
+                if (Key == ConsoleKey.LeftArrow || Key == ConsoleKey.A)
+                {
+                    if (Select > 0)
+                        Select--;
+                }
+
+                if (Key == ConsoleKey.RightArrow || Key == ConsoleKey.D)
+                {
+                    if (Select < End)
+                        Select++;
+                }
+
+                for (int i = 0; i <= End; i++)
+                {
+                    if (i == Select)
+                        WriteGreen("■");
+                    else
+                        Console.Write("■");
+                }
+
+                Key = Console.ReadKey(true).Key;
+            }
+
+            return Select;
+        }
+
+        public class ScoreWithName : IComparable
+        {
+            public double Score { get; set; }
+            public string Name { get; set; }
+
+            public ScoreWithName(double Score, string Name)
+            {
+                this.Score = Score;
+                this.Name = Name;
+            }
+
+            public static implicit operator ScoreWithName((double, string) ScoreWithName)
+            {
+                return new ScoreWithName(ScoreWithName.Item1, ScoreWithName.Item2);
+            }
+
+            public int CompareTo(object? obj)
+            {
+                ScoreWithName otherscore = obj as ScoreWithName;
+                return this.Score > otherscore.Score ? -1 : 1;
+            }
         }
 
         public class tetr15
@@ -52,7 +313,7 @@ namespace tetr15
 
             private bool _wasHeldSwapped;
 
-            private int _score;
+            private double _score;
 
             private int _scoreCollectionLines;
 
@@ -61,6 +322,14 @@ namespace tetr15
             private int _level;
 
             private int _levelDelayStepSize;
+
+            private int _tetrisesInRow;
+
+            private int _rotationPoint;
+
+            private Dictionary<string, Position[]> _JLTSZRotations;
+
+            private Dictionary<string, Position[]> _IRotations;
 
             public tetr15()
             {
@@ -84,6 +353,8 @@ namespace tetr15
                 _linesClearedUpToTen = 0;
                 _level = 0;
                 _levelDelayStepSize = 20;
+                _tetrisesInRow = 0;
+                _rotationPoint = 0;
 
                 PiecesShapes = new Dictionary<Piece, Position[]>
                     {
@@ -96,6 +367,31 @@ namespace tetr15
                         {Piece.T, new Position[] { (4, 2), (4, 1), (3, 2), (5, 2) } }
                     };
 
+                _JLTSZRotations = new Dictionary<string, Position[]>
+                {
+                    {"01", new Position[]{(0, 0) ,(-1, 0) ,(-1,-1) ,( 0, 2) ,(-1, 2)} },
+                    {"10", new Position[]{ (0, 0), (1, 0), (1, 1), (0, -2), (1, -2) } },
+                    {"12", new Position[]{ (0, 0), (1, 0), (1, 1), (0, -2), (1, -2) } },
+                    {"21", new Position[]{ (0, 0), (-1, 0), (-1, -1), (0, 2), (-1, 2) } },
+                    {"23", new Position[]{ (0, 0), (1, 0), (1, -1), (0, 2), (1, 2) } },
+                    {"32", new Position[]{ (0, 0), (-1, 0), (-1, 1), (0, -2), (-1, -2) } },
+                    {"30", new Position[]{ (0, 0), (-1, 0), (-1, 1), (0, -2), (-1, -2) } },
+                    {"03", new Position[]{ (0, 0), (1, 0), (1, -1), (0, 2), (1, 2) } }
+                };
+
+                _IRotations = new Dictionary<string, Position[]>
+                {
+                    {"01", new Position[]{ (0, 0), (-2, 0), (1, 0), (1, -2), (-2, 1) } },
+                    {"03", new Position[]{ (0, 0), (2, 0), (-1, 0), (-1, -2), (2, 1) } },
+                    {"21", new Position[]{ (0, 0), (-2, 0), (1, 0), (-2, -1), (1, 2) } },
+                    {"23", new Position[]{ (0, 0), (2, 0), (-1, 0), (2, -1), (-1, 2) } },
+                    {"10", new Position[]{ (0, 0), (2, 0), (-1, 0), (2, -1), (-1, 2) } },
+                    {"30", new Position[]{ (0, 0), (-2, 0), (1, 0), (-2, -1), (1, 2) } },
+                    {"12", new Position[]{ (0, 0), (-1, 0), (2, 0), (-1, -2), (2, 1) } },
+                    {"32", new Position[]{ (0, 0), (1, 0), (-2, 0), (1, -2), (-2, 1) } }
+                };
+
+
                 for (int x = 0; x < _board.GetLength(0); x++)
                 {
                     for (int y = 0; y < _board.GetLength(1); y++)
@@ -105,8 +401,9 @@ namespace tetr15
                 }
             }
 
-            public int StartGame(int StartingLevel)
+            public double StartGame(int StartingLevel)
             {
+                Console.SetWindowSize(35, 26);
                 _level = StartingLevel;
                 _delay -= _levelDelayStepSize * _level;
 
@@ -114,17 +411,18 @@ namespace tetr15
                 {
                     while (!_isGameOver)
                     {
-                        InputTick();
+                    Tick();
                     }
                 });
 
                 _gravityStopwatch.Start();
+
                 while (!_isGameOver)
                 {
-                    Tick();
+                        InputTick();
                 }
 
-                return 0;
+                return _score;
             }
 
             private void InputTick()
@@ -136,7 +434,11 @@ namespace tetr15
                 {
                     case ConsoleKey.W: //Rotate
                     case ConsoleKey.UpArrow:
-                        CheckAndRotateCurrentPiece();
+                        CheckAndRotateCurrentPieceClockwise();
+                        break;
+
+                    case ConsoleKey.Z:
+                        CheckAndRotateCurrentPieceCounter();
                         break;
 
                     case ConsoleKey.A: //Left
@@ -205,6 +507,7 @@ namespace tetr15
                 {
                     AwardScore(_scoreCollectionLines);
                     _scoreCollectionStopwatch.Reset();
+                    _scoreCollectionLines = 0;
                 }
 
                 if (_bag.Count() == 1) FillBag();
@@ -218,28 +521,34 @@ namespace tetr15
 
             private void AwardScore(int LinesCleared)
             {
+                float LevelMultiplier = 1 + (_level / 5);
+
                 switch (LinesCleared)
                 {
                     case 0:
                         return;
                     case 1:
-                        _score += 100;
+                        _score += 100 * LevelMultiplier;
+                        _tetrisesInRow = 0;
                         break;
                     case 2:
-                        _score += 300;
+                        _score += 300 * LevelMultiplier;
+                        _tetrisesInRow = 0;
                         break;
                     case 3:
-                        _score += 500;
+                        _score += 500 * LevelMultiplier;
+                        _tetrisesInRow = 0;
                         break;
                     case 4:
-                        _score += 1000;
+                        _score += 1000 * (_tetrisesInRow + 1) * LevelMultiplier;
+                        _tetrisesInRow++;
                         break;
                 }
 
                 _linesClearedUpToTen += LinesCleared;
 
                 if (_level < 20)
-                    if (_linesClearedUpToTen % 10 != 0)
+                    if (_linesClearedUpToTen > 10)
                     {
                         _linesClearedUpToTen -= 10;
                         _level++;
@@ -249,7 +558,7 @@ namespace tetr15
 
             //Checks if any lines have been cleared and deletes them using DeleteLine
             //Returns the amount of lines cleared.
-            private int CheckAndClearLines()
+            private void CheckAndClearLines()
             {
                 int Lines = 0;
 
@@ -277,7 +586,6 @@ namespace tetr15
                         DeleteLine(y);
                     }
                 }
-                return Lines;
             }
 
             //Deletes a line
@@ -336,6 +644,7 @@ namespace tetr15
                     }
                 }
 
+                _rotationPoint = 0;
                 _player = Array.Empty<Position>();
                 _wasHeldSwapped = false;
             }
@@ -408,20 +717,131 @@ namespace tetr15
                 }
             }
 
-            private void CheckAndRotateCurrentPiece()
+            private void CheckAndRotateCurrentPieceClockwise()
             {
                 if (_currentPiece == Piece.O)
                     return;
 
-                Position[] Rotated = GetRotated(_player, 1);
-                if (IsValidAndNotPlayer(Rotated))
+                Position[] Rotated;
+                switch (_currentPiece)
                 {
-                    _player = Rotated;
-                    if (_currentPiece == Piece.I)
-                        Swap(_player, 0, 1);
-                    _graceTicks = 1;
+                    case Piece.I:
+                        Rotated = RotateICounter();
+                        break;
+                    case Piece.T:
+                    case Piece.J:
+                    case Piece.Z:
+                    case Piece.L:
+                    case Piece.S:
+                        Rotated = RotateJLTSZClockwise();
+                        break;
+                    default:
+                        return;
                 }
+
+                if (Rotated == _player) return; ;
+
+                _player = Rotated;
+                if (_currentPiece == Piece.I)
+                    Swap(_player, 0, 1);
+                _graceTicks = 1;
             }
+
+
+            private void CheckAndRotateCurrentPieceCounter()
+            {
+                if (_currentPiece == Piece.O)
+                    return;
+
+                Position[] Rotated;
+                switch (_currentPiece)
+                {
+                    case Piece.I:
+                        Rotated = RotateICounter();
+                        break;
+                    case Piece.T:
+                    case Piece.J:
+                    case Piece.Z:
+                    case Piece.L:
+                    case Piece.S:
+                        Rotated = RotateJLTSZClockwise();
+                        break;
+                    default:
+                        return;
+                }
+
+                if (Rotated == _player) return; ;
+
+                _player = Rotated;
+                if (_currentPiece == Piece.I)
+                    Swap(_player, 0, 1);
+                _graceTicks = 1;
+            }
+
+            private Position[] RotateIClockwise()
+            {
+                return GetClockwiseRotation(_IRotations);
+            }
+
+            private Position[] RotateICounter()
+            {
+                return GetCounterRotation(_IRotations);
+            }
+
+            private Position[] RotateJLTSZClockwise()
+            {
+                return GetClockwiseRotation(_JLTSZRotations);
+            }
+
+            private Position[] RotateJLTSZCounter()
+            {
+                return GetCounterRotation(_JLTSZRotations);
+            }
+
+            public Position[] GetClockwiseRotation(Dictionary<string, Position[]> RotationDict)
+            {
+                int NextRotation = (_rotationPoint + 1) % 4;
+                Position[] Base = GetRotated(_player, 1);
+                string RotationSymbol = _rotationPoint + "" + NextRotation;
+                Position[] RotationAttempts = RotationDict[RotationSymbol];
+
+                for (int i = 0; i < RotationAttempts.Length; i++)
+                {
+                    Position[] Attempt = GetMoved(Base, RotationAttempts[i]);
+                    if (IsValidAndNotPlayer(Attempt))
+                    {
+                        if (_rotationPoint + 1 > 3)
+                            _rotationPoint = 0;
+                        else
+                            _rotationPoint++;
+                        return Attempt;
+                    }
+                }
+                return _player;
+            }
+
+            public Position[] GetCounterRotation(Dictionary<string, Position[]> RotationDict)
+            {
+                int NextRotation = (_rotationPoint + 3) % 4;
+                Position[] Base = GetRotated(_player, 3);
+                string RotationSymbol = _rotationPoint + "" + NextRotation;
+                Position[] RotationAttempts = _IRotations[RotationSymbol];
+
+                for (int i = 0; i < RotationAttempts.Length; i++)
+                {
+                    Position[] Attempt = GetMoved(Base, RotationAttempts[i]);
+                    if (IsValidAndNotPlayer(Attempt))
+                    {
+                        if (_rotationPoint - 1 < 0)
+                            _rotationPoint = 3;
+                        else
+                            _rotationPoint--;
+                        return Attempt;
+                    }
+                }
+                return _player;
+            }
+
 
             private void HardDropPlayer()
             {
@@ -514,6 +934,22 @@ namespace tetr15
                 return output;
             }
 
+            public Position[] GetMoved(Position[] Input, Position Offset)
+            {
+                int XOffset = Offset.x;
+                int YOffset = Offset.y;
+
+                Position[] output = new Position[Input.Length];
+
+                for (int i = 0; i < output.Length; i++)
+                {
+                    output[i] = (Input[i].x + XOffset, Input[i].y + YOffset);
+                }
+
+                return output;
+            }
+
+
             private Piece[,] _printBoard;
             private Piece[,] _heldBoard;
             private void Print()
@@ -543,7 +979,7 @@ namespace tetr15
 
                 WriteLineGreen("╔══════════════════╦════════════╗");
 
-                WriteLineGreen($"║  Score:{GetIntCompletedToNthDigit(_score, 8)}  ║  Level:{GetIntCompletedToNthDigit(_level, 2)}  ║");
+                WriteLineGreen($"║  Score:{GetDoubleCompletedToNthDigit(_score, 8)}  ║  Level:{GetDoubleCompletedToNthDigit(_level, 2)}  ║");
 
                 WriteLineGreen("╠══════════════════╩════════════╣");
 
@@ -642,29 +1078,9 @@ namespace tetr15
 
             }
 
-            private string GetIntCompletedToNthDigit(int input, int digit)
-            {
-                string str = input.ToString();
-
-                if (str.Length > digit) throw new Exception($"Error! Number is longer than {digit} digits.");
-
-                return new string('0', digit - str.Length) + str;
-            }
 
 
-            private void WriteGreen(string str)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write(str);
-                Console.ForegroundColor = ConsoleColor.White;
-            }
 
-            private void WriteLineGreen(string str)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(str);
-                Console.ForegroundColor = ConsoleColor.White;
-            }
 
             private void PrintWithColorByPiece(Piece InputCharacter)
             {
