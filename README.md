@@ -1,6 +1,6 @@
 # tetr15
 
-[![Made with C#](https://img.shields.io/badge/Made%20with-CS-blue)](https://en.wikipedia.org/wiki/C_Sharp_(programming_language))
+[![Made with C#](https://img.shields.io/badge/Made%20with-CS-blue)](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) [![LatestRelease](https://img.shields.io/badge/Version-1.0.0-orange)](https://en.wikipedia.org/wiki/C_Sharp_(programming_language))
 
 Tetris on console, made using pure C#!
 
