@@ -280,9 +280,7 @@ namespace tetr15
             /// </summary>
             private Piece[,] _board;
 
-            private Piece[,] _nextPieceBoard;
-            private Piece[,] _2ndNextPieceBoard;
-            private Piece[,] _3rdNextPieceBoard;
+            private List<Piece[,]> _nextBoards;
 
             private Position[] _heldShape;
 
@@ -336,9 +334,6 @@ namespace tetr15
                 Console.CursorVisible = false;
 
                 _board = new Piece[10, 24];
-                _nextPieceBoard = new Piece[4, 2];
-                _2ndNextPieceBoard = new Piece[4, 2];
-                _3rdNextPieceBoard = new Piece[4, 2];
                 _heldShape = Array.Empty<Position>();
                 _player = Array.Empty<Position>();
                 _bag = new Queue<Piece>();
@@ -355,6 +350,10 @@ namespace tetr15
                 _levelDelayStepSize = 20;
                 _tetrisesInRow = 0;
                 _rotationPoint = 0;
+
+                _nextBoards = new List<Piece[,]>();
+                for(int i = 0; i < 3; i++)
+                    _nextBoards.Add(new Piece[4, 2]);
 
                 PiecesShapes = new Dictionary<Piece, Position[]>
                     {
@@ -437,7 +436,7 @@ namespace tetr15
 
                 for (int i = 0; i < SecondNextPieceShape.Length; i++)
                 {
-                    _2ndNextPieceBoard[SecondNextPieceShape[i].x - 3, SecondNextPieceShape[i].y - 1] = SecondNextPieceType;
+                    _nextBoards[1][SecondNextPieceShape[i].x - 3, SecondNextPieceShape[i].y - 1] = SecondNextPieceType;
                 }
 
                 Piece NextPieceType = _bag.Peek();
@@ -445,7 +444,7 @@ namespace tetr15
 
                 for (int i = 0; i < NextPieceShape.Length; i++)
                 {
-                    _nextPieceBoard[NextPieceShape[i].x - 3, NextPieceShape[i].y - 1] = NextPieceType;
+                    _nextBoards[0][NextPieceShape[i].x - 3, NextPieceShape[i].y - 1] = NextPieceType;
                 }
             }
 
@@ -706,7 +705,7 @@ namespace tetr15
 
                 for (int i = 0; i < ThirdNextPieceShape.Length; i++)
                 {
-                    _3rdNextPieceBoard[ThirdNextPieceShape[i].x - 3, ThirdNextPieceShape[i].y - 1] = ThirdNextPieceType;
+                    _nextBoards[2][ThirdNextPieceShape[i].x - 3, ThirdNextPieceShape[i].y - 1] = ThirdNextPieceType;
                 }
 
                 Piece SecondNextPieceType = _bag.ElementAt(1);
@@ -715,14 +714,14 @@ namespace tetr15
 
             private void TransferNextPiecesWindows()
             {
-                _nextPieceBoard = GetCopy(_2ndNextPieceBoard);
-                _2ndNextPieceBoard = GetCopy(_3rdNextPieceBoard);
+                _nextBoards[0] = GetCopy(_nextBoards[1]);
+                _nextBoards[1] = GetCopy(_nextBoards[2]);
 
-                for (int x = 0; x < _3rdNextPieceBoard.GetLength(0); x++)
+                for (int x = 0; x < _nextBoards[2].GetLength(0); x++)
                 {
-                    for (int y = 0; y < _3rdNextPieceBoard.GetLength(1); y++)
+                    for (int y = 0; y < _nextBoards[2].GetLength(1); y++)
                     {
-                        _3rdNextPieceBoard[x, y] = Piece.non;
+                        _nextBoards[2][x, y] = Piece.non;
                     }
                 }
             }
@@ -1007,90 +1006,89 @@ namespace tetr15
                             Console.Write(" ");
                     }
 
-                    int SideMenuBase = 3;
-
-                    if (y == SideMenuBase + 10)
-                        WriteGreen("╠");
-                    else
-                        WriteGreen("║");
-
-                    if (y == SideMenuBase + 1)
-                    {
-                        Console.Write("Next:");
-                        WriteLineGreen("    ║");
-                    }
-                    else if (y > SideMenuBase + 1 && y < SideMenuBase + 4)
-                    {
-                        for (int x = 0; x < _nextPieceBoard.GetLength(0); x++)
-                        {
-                            Console.Write(" ");
-
-                            PrintWithColorByPiece(_nextPieceBoard[x, y - (SideMenuBase + 2)]);
-
-                            if (x == _nextPieceBoard.GetLength(0) - 1)
-                                Console.Write(" ");
-                        }
-                        WriteLineGreen("║ ");
-                    }
-                    else if (y > SideMenuBase + 4 && y < SideMenuBase + 7)
-                    {
-                        for (int x = 0; x < _2ndNextPieceBoard.GetLength(0); x++)
-                        {
-                            Console.Write(" ");
-
-                            PrintWithColorByPiece(_2ndNextPieceBoard[x, y - (SideMenuBase + 5)]);
-
-                            if (x == _2ndNextPieceBoard.GetLength(0) - 1)
-                                Console.Write(" ");
-                        }
-                        WriteLineGreen("║ ");
-                    }
-                    else if (y > SideMenuBase + 7 && y < SideMenuBase + 10)
-                    {
-                        for (int x = 0; x < _3rdNextPieceBoard.GetLength(0); x++)
-                        {
-                            Console.Write(" ");
-
-                            PrintWithColorByPiece(_3rdNextPieceBoard[x, y - (SideMenuBase + 8)]);
-
-                            if (x == _3rdNextPieceBoard.GetLength(0) - 1)
-                                Console.Write(" ");
-                        }
-                        WriteLineGreen("║ ");
-                    }
-                    else if (y == SideMenuBase + 10)
-                    {
-                        WriteLineGreen("═════════╣");
-                    }
-                    else if (y == SideMenuBase + 11)
-                    {
-                        Console.Write("Held:");
-                        WriteLineGreen("    ║");
-                    }
-                    else if (y > SideMenuBase + 11 && y < SideMenuBase + 14)
-                    {
-                        for (int x = 0; x < _heldBoard.GetLength(0); x++)
-                        {
-                            Console.Write(" ");
-
-                            PrintWithColorByPiece(_heldBoard[x, y - (SideMenuBase + 12)]);
-
-                            if (x == _heldBoard.GetLength(0) - 1)
-                                Console.Write(" ");
-                        }
-                        WriteLineGreen("║ ");
-                    }
-                    else
-                        WriteLineGreen("         ║");
+                    PrintSideMenu(y);
                 }
-
                 WriteLineGreen("╚═════════════════════╩═════════╝");
-
             }
 
+            private void PrintSideMenu(int y)
+            {
+                int SideMenuBase = 3;
 
+                if (y == SideMenuBase + 10)
+                    WriteGreen("╠");
+                else
+                    WriteGreen("║");
 
+                if (y == SideMenuBase + 1)
+                {
+                    Console.Write("Next:");
+                    WriteLineGreen("    ║");
+                }
+                else if (y > SideMenuBase + 1 && y < SideMenuBase + 4)
+                {
+                    for (int x = 0; x < _nextBoards[0].GetLength(0); x++)
+                    {
+                        Console.Write(" ");
 
+                        PrintWithColorByPiece(_nextBoards[0][x, y - (SideMenuBase + 2)]);
+
+                        if (x == _nextBoards[0].GetLength(0) - 1)
+                            Console.Write(" ");
+                    }
+                    WriteLineGreen("║ ");
+                }
+                else if (y > SideMenuBase + 4 && y < SideMenuBase + 7)
+                {
+                    for (int x = 0; x < _nextBoards[1].GetLength(0); x++)
+                    {
+                        Console.Write(" ");
+
+                        PrintWithColorByPiece(_nextBoards[1][x, y - (SideMenuBase + 5)]);
+
+                        if (x == _nextBoards[1].GetLength(0) - 1)
+                            Console.Write(" ");
+                    }
+                    WriteLineGreen("║ ");
+                }
+                else if (y > SideMenuBase + 7 && y < SideMenuBase + 10)
+                {
+                    for (int x = 0; x < _nextBoards[2].GetLength(0); x++)
+                    {
+                        Console.Write(" ");
+
+                        PrintWithColorByPiece(_nextBoards[2][x, y - (SideMenuBase + 8)]);
+
+                        if (x == _nextBoards[2].GetLength(0) - 1)
+                            Console.Write(" ");
+                    }
+                    WriteLineGreen("║ ");
+                }
+                else if (y == SideMenuBase + 10)
+                {
+                    WriteLineGreen("═════════╣");
+                }
+                else if (y == SideMenuBase + 11)
+                {
+                    Console.Write("Held:");
+                    WriteLineGreen("    ║");
+                }
+                else if (y > SideMenuBase + 11 && y < SideMenuBase + 14)
+                {
+                    for (int x = 0; x < _heldBoard.GetLength(0); x++)
+                    {
+                        Console.Write(" ");
+
+                        PrintWithColorByPiece(_heldBoard[x, y - (SideMenuBase + 12)]);
+
+                        if (x == _heldBoard.GetLength(0) - 1)
+                            Console.Write(" ");
+                    }
+                    WriteLineGreen("║ ");
+                }
+                else
+                    WriteLineGreen("         ║");
+            }
 
             private void PrintWithColorByPiece(Piece InputCharacter)
             {
