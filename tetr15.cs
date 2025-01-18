@@ -145,17 +145,9 @@ namespace tetr15
 
                 Task.Factory.StartNew(() =>
                 {
-                    try
+                    while (!_isGameOver)
                     {
-                        while (!_isGameOver)
-                        {
-                            Tick();
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        File.AppendAllLines("BUG AOUGH.txt", [e.Message]);
-                        Environment.Exit(0);
+                        Tick();
                     }
                 });
 
@@ -311,7 +303,7 @@ namespace tetr15
                 _linesClearedUpToTen += LinesCleared;
 
                 if (_level < 20)
-                    if (_linesClearedUpToTen > 10)
+                    if (_linesClearedUpToTen >= 10)
                     {
                         _linesClearedUpToTen -= 10;
                         _level++;
@@ -395,7 +387,7 @@ namespace tetr15
                     _board[_player[i].x, _player[i].y] = _currentPiece;
                 }
 
-                for (int y = 0; y < 4; y++)
+                for (int y = 0; y < 3; y++)
                 {
                     for (int x = 0; x < 24; x++)
                     {
@@ -731,7 +723,7 @@ namespace tetr15
 
                 WriteLineGreen($"║  Score:{GetDoubleCompletedToNthDigit(_score, 8)}  ║  Level:{GetDoubleCompletedToNthDigit(_level, 2)}  ║");
 
-                WriteLineGreen("╠══════════════════╩════════════╣");
+                WriteLineGreen("╠══════════════════╩══╦═════════╣");
 
                 for (int y = 3; y < _printBoard.GetLength(1); y++)
                 {
@@ -764,8 +756,8 @@ namespace tetr15
 
                 if (y == SideMenuBase + 1)
                 {
-                    Console.Write("Next:");
-                    WriteLineGreen("    ║");
+                    Console.Write("  Next:");
+                    WriteLineGreen("  ║");
                 }
                 else if (y > SideMenuBase + 1 && y < SideMenuBase + 4)
                 {
@@ -815,8 +807,8 @@ namespace tetr15
                 }
                 else if (y == SideMenuBase + 11)
                 {
-                    Console.Write("Held:");
-                    WriteLineGreen("    ║");
+                    Console.Write("  Held:");
+                    WriteLineGreen("  ║");
                 }
                 else if (y > SideMenuBase + 11 && y < SideMenuBase + 14)
                 {

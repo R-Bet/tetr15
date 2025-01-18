@@ -16,6 +16,7 @@ namespace tetr15
         static void Main(string[] args)
         {
             PrintMenu();
+            Console.CursorVisible = false;
 
             while (true)
                 switch (Console.ReadKey(true).KeyChar)
@@ -27,6 +28,9 @@ namespace tetr15
                         ShowTopScores();
                         break;
                     case '3':
+                        ShowControls();
+                        break;
+                    case '4':
                         Exit();
                         break;
                 }
@@ -35,6 +39,36 @@ namespace tetr15
         public static void Exit()
         {
             Environment.Exit(0);
+        }
+
+        public static void ShowControls()
+        {
+            Console.Clear();
+            Console.SetWindowSize(50, 15);
+            StringBuilder sb = new StringBuilder();
+            Console.ForegroundColor = ConsoleColor.Green;
+            sb.Append(
+                "╔══════════════════════════════════════════════╗\n" +
+            "║                                              ║\n" +
+            "║ Move piece - right, left and down arrow keys ║\n" +
+            "║ or the W, S and D keys respectively          ║\n" +
+            "║                                              ║\n" +
+
+            "║ Rotate -                                     ║\n" +
+            "║   Clockwise - the up arrow or W key          ║\n" +
+            "║   Counterclockwise - Z key                   ║\n" +
+            "║                                              ║\n" +
+            "║ Space - hard drop                            ║\n" +
+            "║                                              ║\n" +
+            "║ Hold - C key                                 ║\n" +
+            "║                                              ║\n" +
+            "╚══════════════════════════════════════════════╝\n"
+
+                );
+            Console.WriteLine(sb);
+            Console.SetCursorPosition(0, 0);
+            Console.ReadKey(true);
+            PrintMenu();
         }
 
         public static string GetDoubleCompletedToNthDigit(double input, int digit)
@@ -64,7 +98,8 @@ namespace tetr15
 
         public static void PrintMenu()
         {
-            Console.SetWindowSize(30, 10);
+            Console.Clear();
+            Console.SetWindowSize(25, 10);
             WriteLineGreen("╔════════════════════╗");
             WriteGreen("║ ");
             WriteRainbow("Welcome to Tetr15!");
@@ -77,6 +112,9 @@ namespace tetr15
             Console.Write(" Top Scores     ");
             WriteLineGreen("║");
             WriteGreen("║ (3)");
+            Console.Write(" Show Controls  ");
+            WriteLineGreen("║");
+            WriteGreen("║ (4)");
             Console.Write(" Exit Game      ");
             WriteLineGreen("║");
             WriteLineGreen("║                    ║");
@@ -90,6 +128,7 @@ namespace tetr15
 
         public static int SelectNumber(int End)
         {
+            Console.SetWindowSize(30, 7);
             Console.Clear();
 
             WriteLineGreen("Select starting level (0-" + End + ")");
@@ -114,6 +153,9 @@ namespace tetr15
             }
 
             WriteLineGreen("╝");
+
+            WriteLineGreen("Choose using arrow keys");
+            WriteLineGreen("Press enter to continue");
 
             int Select = 0;
             ConsoleKey Key = Console.ReadKey(true).Key;
@@ -144,6 +186,8 @@ namespace tetr15
                 Key = Console.ReadKey(true).Key;
             }
 
+
+
             return Select;
         }
 
@@ -166,8 +210,26 @@ namespace tetr15
 
         public static void ShowTopScores()
         {
+            if (!File.Exists("Scores.txt"))
+            {
+                Console.Clear();
+                Console.WriteLine("There are no scores to show!");
+                Console.ReadKey(true);
+                PrintMenu();
+                return;
+            }
             Console.Clear();
+
             string[] ScoreTXT = File.ReadAllLines("Scores.txt");
+            if (ScoreTXT.Length <= 0)
+            {
+                Console.Clear();
+                Console.WriteLine("There are no scores to show!");
+                Console.ReadKey(true);
+                PrintMenu();
+                return;
+            }
+
             List<ScoreWithName> Scores = new List<ScoreWithName>();
             for (int i = 0; i < ScoreTXT.Length; i++)
             {
@@ -177,6 +239,9 @@ namespace tetr15
             }
 
             Scores.Sort();
+
+            Console.WriteLine(Scores[0]);
+            Console.SetWindowSize(30, 12);
 
             WriteLineGreen("Top scores: ");
             int ShowScoresCount = 10;
