@@ -592,6 +592,8 @@ namespace tetr15
 
             private Position[] GetHardDroppedPlayer()
             {
+                if (_player == null || _player.Length < 4) return _player;
+
                 int yOffset = 1;
                 Position[] Current = GetMoved(_player, 0, yOffset);
                 Position[] Previous = GetCopy(_player);

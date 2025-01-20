@@ -45,4 +45,6 @@ _or just get the prebuilt from the releases `¯\_(ツ)_/¯`_
 
 4. Press the Z key to rotate counterclockwise.
 
-5. Press the Space key to hard-drop.
+5. Press the C key to hold a piece or switch the held piece.
+
+6. Press the Space key to hard-drop.
