@@ -203,7 +203,7 @@ namespace tetr15
 
                     case ConsoleKey.S: //Down
                     case ConsoleKey.DownArrow:
-                        DropTick();
+                        DropWithoutTick();
                         break;
 
                     case ConsoleKey.D: //Right
@@ -212,6 +212,7 @@ namespace tetr15
                         break;
 
                     case ConsoleKey.Spacebar: //Drop
+                    case ConsoleKey.Enter:
                         HardDropPlayer();
                         break;
 
@@ -375,6 +376,14 @@ namespace tetr15
                         _graceTicks = 2;
                     }
                     else _graceTicks--;
+                }
+            }
+
+            private void DropWithoutTick()
+            {
+                if (IsValidAndNotPlayer(GetMoved(_player, 0, 1)))
+                {
+                    _player = GetMoved(_player, 0, 1);
                 }
             }
 
