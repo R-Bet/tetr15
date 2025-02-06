@@ -1,6 +1,6 @@
 # tetr15
 
-[![Made with C#](https://img.shields.io/badge/Made%20with-CS-blue)](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) [![LatestRelease](https://img.shields.io/badge/Version-1.0.2-orange)](https://github.com/R-Bet/tetr15/releases/tag/1.0.2)
+[![Made with C#](https://img.shields.io/badge/Made%20with-CS-blue)](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) [![LatestRelease](https://img.shields.io/badge/Version-1.1.0-orange)](https://github.com/R-Bet/tetr15/releases/tag/1.1.0)
 
 Tetris on console, made using pure C#!
 
@@ -48,4 +48,8 @@ _or just get the prebuilt from the releases `¯\_(ツ)_/¯`_
 5. Press the C key to hold a piece or switch the held piece.
 
 6. Press the Space key to hard-drop.
+
+7. Press the ESC key to quit to menu.
+
+8. Press the R key to restart current game with the same starting level.
 
