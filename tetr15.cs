@@ -57,11 +57,19 @@ namespace tetr15
 
             private int _rotationPoint;
 
+            private bool _showGhostPiece;
+
+            private bool _animateLineClear;
+
             private Dictionary<string, Position[]> _JLTSZRotations;
 
             private Dictionary<string, Position[]> _IRotations;
 
-            public tetr15()
+            private object _deletionLineLock;
+
+            private List<int> _deletionLines;
+
+            public tetr15(List<(string setting, bool current)> Settings)
             {
                 Console.CursorVisible = false;
 
@@ -82,6 +90,10 @@ namespace tetr15
                 _levelDelayStepSize = 20;
                 _tetrisesInRow = 0;
                 _rotationPoint = 0;
+                _showGhostPiece = Settings[0].current;
+                _animateLineClear = Settings[1].current;
+                _deletionLineLock = new object();
+                _deletionLines = new List<int>();
 
                 _nextBoards = new List<Piece[,]>();
                 for (int i = 0; i < 3; i++)
@@ -219,6 +231,17 @@ namespace tetr15
                     case ConsoleKey.C: //Hold
                         CheckIfSwappedAndHold();
                         break;
+
+                    case ConsoleKey.Escape:
+                        _score = -2;
+                        _isGameOver = true;
+                        _score = -2;
+                        break;
+
+                    case ConsoleKey.R:
+                        _isGameOver = true;
+                        _score = -1;
+                        break;
                 }
             }
 
@@ -262,6 +285,10 @@ namespace tetr15
                 if (_scoreCollectionStopwatch.ElapsedMilliseconds > 150)
                 {
                     AwardScore(_scoreCollectionLines);
+
+                    DeleteDead();
+
+                    _deletionLines = new List<int>();
                     _scoreCollectionStopwatch.Reset();
                     _scoreCollectionLines = 0;
                 }
@@ -273,6 +300,17 @@ namespace tetr15
 
                 Console.SetCursorPosition(0, 0);
                 Print();
+            }
+
+            private void DeleteDead()
+            {
+                lock (_deletionLineLock)
+                {
+                    for (int i = 0; i < _deletionLines.Count; i++)
+                    {
+                        DeleteLine(_deletionLines[i]);
+                    }
+                }
             }
 
             private void AwardScore(int LinesCleared)
@@ -318,12 +356,12 @@ namespace tetr15
             {
                 int Lines = 0;
 
-                for (int y = _board.GetLength(1) - 1; y >= 0; y--)
+                for (int y = 0; y < _board.GetLength(1); y++)
                 {
                     bool LineFull = true;
                     for (int x = 0; x < _board.GetLength(0); x++)
                     {
-                        if (_board[x, y] == Piece.non || _board[x, y] == Piece.ghost)
+                        if (_board[x, y] == Piece.non || _board[x, y] == Piece.ghost || _board[x, y] == Piece.dead)
                         {
                             LineFull = false;
                             break;
@@ -339,7 +377,15 @@ namespace tetr15
 
                         _scoreCollectionLines += 1;
 
-                        DeleteLine(y);
+                        if (_animateLineClear)
+                        {
+                            KillLine(y);
+                            _deletionLines.Add(y);
+                        }
+                        else
+                        {
+                            DeleteLine(y);
+                        }
                     }
                 }
             }
@@ -360,6 +406,19 @@ namespace tetr15
                     _player[i].y++;
                 }
             }
+
+
+            private void KillLine(int DeletionY)
+            {
+                lock (_deletionLineLock)
+                {
+                    for (int x = 0; x < _board.GetLength(0); x++)
+                    {
+                        _board[x, DeletionY] = Piece.dead;
+                    }
+                }
+            }
+
 
             //Waits 2 ticks before a player's piece becomes part of the board.
             private void DropTick()
@@ -384,6 +443,7 @@ namespace tetr15
                 if (IsValidAndNotPlayer(GetMoved(_player, 0, 1)))
                 {
                     _player = GetMoved(_player, 0, 1);
+                    _graceTicks = 2;
                 }
             }
 
@@ -476,7 +536,7 @@ namespace tetr15
                 switch (_currentPiece)
                 {
                     case Piece.I:
-                        Rotated = RotateICounter();
+                        Rotated = RotateIClockwise();
                         break;
                     case Piece.T:
                     case Piece.J:
@@ -489,7 +549,7 @@ namespace tetr15
                         return;
                 }
 
-                if (Rotated == _player) return; ;
+                if (Rotated == _player) return;
 
                 _player = Rotated;
                 if (_currentPiece == Piece.I)
@@ -514,7 +574,7 @@ namespace tetr15
                     case Piece.Z:
                     case Piece.L:
                     case Piece.S:
-                        Rotated = RotateJLTSZClockwise();
+                        Rotated = RotateJLTSZCounter();
                         break;
                     default:
                         return;
@@ -883,6 +943,9 @@ namespace tetr15
                         Console.Write("■");
                         Console.ForegroundColor = ConsoleColor.White;
                         break;
+                    case Piece.dead:
+                        Console.Write("■");
+                        break;
                     default:
                         Console.Write(" ");
                         break;
@@ -917,6 +980,21 @@ namespace tetr15
                 T temp = arr[a];
                 arr[a] = arr[b];
                 arr[b] = temp;
+            }
+
+
+            public enum Piece
+            {
+                non = 0,
+                O = 1,
+                I = 2,
+                S = 3,
+                Z = 4,
+                L = 5,
+                J = 6,
+                T = 7,
+                ghost = 8,
+                dead = 9
             }
         }
     }

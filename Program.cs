@@ -31,10 +31,108 @@ namespace tetr15
                         ShowControls();
                         break;
                     case '4':
+                        Settings();
+                        break;
+                    case '5':
                         Exit();
                         break;
                 }
         }
+
+        public static void Settings()
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.SetWindowSize(30, 10);
+
+            if (!File.Exists("Settings.config"))
+                MakeSettings();
+
+            List<(string setting, bool current)> Settings = GetSettings();
+
+            PrintSettings(Settings);
+
+            HandleSettingsInput(Settings);
+
+            SetSettings(Settings);
+
+            PrintMenu();
+
+        }
+
+
+        private static void HandleSettingsInput(List<(string setting, bool current)> Settings)
+        {
+            ConsoleKeyInfo input = Console.ReadKey(true);
+            while (input.Key != ConsoleKey.Escape)
+            {
+                Console.SetCursorPosition(0, 0);
+                if (char.IsDigit(input.KeyChar))
+                {
+                    if (int.Parse(input.KeyChar + "") > 0 && int.Parse(input.KeyChar + "") <= Settings.Count)
+                    {
+                        (string setting, bool current) CurrentSet = Settings[int.Parse(input.KeyChar + "") - 1];
+                        Settings[int.Parse(input.KeyChar + "") - 1] = (CurrentSet.setting, !CurrentSet.current);
+                    }
+                }
+
+                PrintSettings(Settings);
+                input = Console.ReadKey(true);
+            }
+        }
+
+        private static void PrintSettings(List<(string setting, bool current)> Settings)
+        {
+            int LineIndex = 1;
+            foreach ((string setting, bool current) Line in Settings)
+            {
+                Console.WriteLine($"({LineIndex}) {Line.setting} - {Line.current}");
+                LineIndex++;
+            }
+        }
+
+        public static void MakeSettings()
+        {
+            string[] SettingLines = new string[]
+            {
+        "show_ghost_piece=1",
+        "animate_line_clear=1"
+            };
+
+            File.WriteAllLines("Settings.config", SettingLines);
+            Thread.Sleep(10);
+        }
+
+        public static List<(string setting, bool current)> GetSettings()
+        {
+            string[] SettingLines = File.ReadAllLines("Settings.config");
+
+            List<(string setting, bool current)> Settings = new List<(string setting, bool current)>();
+
+            for (int i = 0; i < SettingLines.Length; i++)
+            {
+                string SettingLine = SettingLines[i];
+                string[] SettingSplit = SettingLine.Split('=');
+
+                if (SettingSplit.Length != 2)
+                    throw new Exception("Options files is in the wrong format! Please correct or delete the settings file.");
+                Settings.Add((SettingSplit[0], int.Parse(SettingSplit[1]) == 0 ? false : true));
+            }
+
+            return Settings;
+        }
+
+        public static void SetSettings(List<(string setting, bool current)> Settings)
+        {
+            string[] SettingLines = new string[Settings.Count];
+            for (int i = 0; i < Settings.Count; i++)
+            {
+                SettingLines[i] = Settings[i].setting + "=" + (Settings[i].current ? 1 : 0);
+            }
+
+            File.WriteAllLines("Settings.config", SettingLines);
+        }
+
 
         public static void Exit()
         {
@@ -44,16 +142,15 @@ namespace tetr15
         public static void ShowControls()
         {
             Console.Clear();
-            Console.SetWindowSize(50, 15);
+            Console.SetWindowSize(50, 18);
             StringBuilder sb = new StringBuilder();
             Console.ForegroundColor = ConsoleColor.Green;
             sb.Append(
-                "╔══════════════════════════════════════════════╗\n" +
+            "╔══════════════════════════════════════════════╗\n" +
             "║                                              ║\n" +
             "║ Move piece - right, left and down arrow keys ║\n" +
             "║ or the W, S and D keys respectively          ║\n" +
             "║                                              ║\n" +
-
             "║ Rotate -                                     ║\n" +
             "║   Clockwise - the up arrow or W key          ║\n" +
             "║   Counterclockwise - Z key                   ║\n" +
@@ -62,9 +159,11 @@ namespace tetr15
             "║                                              ║\n" +
             "║ Hold - C key                                 ║\n" +
             "║                                              ║\n" +
-            "╚══════════════════════════════════════════════╝\n"
-
-                );
+            "║ Esc - quit to menu                           ║\n" +
+            "║                                              ║\n" +
+            "║ R - restart                                  ║\n" +
+            "║                                              ║\n" +
+            "╚══════════════════════════════════════════════╝\n");
             Console.WriteLine(sb);
             Console.SetCursorPosition(0, 0);
             Console.ReadKey(true);
@@ -82,8 +181,24 @@ namespace tetr15
 
         public static void PlayGame()
         {
-            tetr15 t = new tetr15();
-            double Score = t.StartGame(SelectNumber(20));
+            tetr15 t = new tetr15(GetSettings());
+            int StartingLevel = SelectNumber(20);
+            double Score = t.StartGame(StartingLevel);
+            if (Score == -1)
+            {
+                while (Score == -1)
+                {
+                    Thread.Sleep(10);
+                    t = new tetr15(GetSettings());
+                    Score = t.StartGame(StartingLevel);
+                }
+            }
+            if (Score == -2)
+            {
+                Thread.Sleep(10);
+                PrintMenu();
+                return;
+            }
 
             SwallowingWait(300);
 
@@ -115,8 +230,10 @@ namespace tetr15
             Console.Write(" Show Controls  ");
             WriteLineGreen("║");
             WriteGreen("║ (4)");
-            Console.Write(" Exit Game      ");
+            Console.Write(" Settings       ");
             WriteLineGreen("║");
+            WriteGreen("║ (5)");
+            Console.Write(" Exit Game      ");
             WriteLineGreen("║                    ║");
             WriteLineGreen("╚════════════════════╝");
         }
@@ -186,8 +303,6 @@ namespace tetr15
                 Key = Console.ReadKey(true).Key;
             }
 
-
-
             return Select;
         }
 
@@ -240,7 +355,6 @@ namespace tetr15
 
             Scores.Sort();
 
-            Console.WriteLine(Scores[0]);
             Console.SetWindowSize(30, 12);
 
             WriteLineGreen("Top scores: ");
@@ -250,7 +364,7 @@ namespace tetr15
 
             for (int i = 0; i < ShowScoresCount; i++)
             {
-                WriteLineGreen(Scores[i].Name + ": " + Scores[i].Score);
+                WriteLineGreen(Scores[i].Name.Trim() + ": " + Scores[i].Score);
             }
 
 
@@ -315,19 +429,6 @@ namespace tetr15
                 RainbowIndex += Step;
             }
             Console.BackgroundColor = ConsoleColor.Black;
-        }
-
-        public enum Piece
-        {
-            non = 0,
-            O = 1,
-            I = 2,
-            S = 3,
-            Z = 4,
-            L = 5,
-            J = 6,
-            T = 7,
-            ghost = 8
         }
     }
 }
